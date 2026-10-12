@@ -9,7 +9,7 @@ Imports from all other modules and runs the full pipeline:
   5. Restrict to the patent_master-approved patent shortlist
   6. Deduplicate patents
   7. Reset always-recalculated fields
-  8. Source Controlling Patent Expiry Year from patent_discovery
+  8. Source Controlling Patent Expiry Year from patent_master.expiry_date
   9. Calculate base Years to Entry
  10. Overwrite Phase / derived fields from clinical_efficacy / vw_drug_details
  11. Override Marketed/Pre-registration rows with real LOE / approval dates
@@ -18,10 +18,11 @@ Imports from all other modules and runs the full pipeline:
  14. Upload to BigQuery (d1)
  15. Build d2
 
-Step 5 ensures every patent-level computation from that point on (dedup,
-expiry sourcing, Years to Entry, d2) only ever sees patents patent_master
-marks approved (patent_status = 'PDF Downloaded', confidence > 0.3) —
-mirroring IP_refactored.chunking.patent_filter's approval criteria.
+patent_master is the single source for both step 5 and step 8 — it's
+loaded once (args.patent_project/args.patent_dataset) and filtered down to
+approved rows (patent_status = 'PDF Downloaded', confidence > 0.3), then
+reused for the approval shortlist AND the expiry_date lookup. patent_discovery
+is not used anywhere in this pipeline.
 """
 
 import sys
@@ -49,9 +50,10 @@ from loe_dates import (
     _find_loe_columns,
 )
 from patents import (
+    _load_patent_master_approved,
     _filter_to_approved_patents,
     _dedupe_duplicate_patents,
-    _apply_patent_discovery_expiry,
+    _apply_patent_master_expiry,
     _build_d2,
 )
 
@@ -289,12 +291,18 @@ def combine(args) -> None:
         print(f"  Kept {len(leftover_master_cols)} additional loe_table_2 column(s): "
               f"{', '.join(leftover_master_cols)}")
 
-    # ── 5. Restrict to patent_master-approved patents ─────────────────────────
+    # ── 5. Load patent_master once (independent of source + d1/d2 locations),
+    #        reused below for both the approval filter and expiry sourcing ────
+    patent_master_df = _load_table_from_bq(
+        args.patent_project, args.patent_dataset, args.patent_master_table,
+        "patent_master", credentials_path)
+    patent_master_approved = _load_patent_master_approved(patent_master_df)
+
     if not args.no_patent_filter:
-        final_df = _filter_to_approved_patents(
-            final_df, target_project, target_dataset, args.patent_master_table, credentials_path)
+        final_df = _filter_to_approved_patents(final_df, patent_master_approved)
     else:
-        print("\n  --no-patent-filter given — skipping patent_master approval filter.")
+        print("\n  --no-patent-filter given — skipping patent_master approval filter "
+              "(patent_master is still used below for Controlling Patent Expiry Year).")
 
     # ── 6. Deduplicate patents ────────────────────────────────────────────────
     final_df = _dedupe_duplicate_patents(final_df)
@@ -302,11 +310,8 @@ def combine(args) -> None:
     # ── 7. Reset always-recalculated fields ───────────────────────────────────
     final_df = _reset_always_recalculated_fields(final_df)
 
-    # ── 8. Source Controlling Patent Expiry Year ──────────────────────────────
-    patent_discovery_df = _load_table_from_bq(
-        target_project, target_dataset, args.patent_discovery_table,
-        "patent_discovery", credentials_path)
-    final_df = _apply_patent_discovery_expiry(final_df, patent_discovery_df)
+    # ── 8. Source Controlling Patent Expiry Year from patent_master ──────────
+    final_df = _apply_patent_master_expiry(final_df, patent_master_approved)
 
     # ── 9. Calculate base Years to Entry ─────────────────────────────────────
     current_year = datetime.now().year
@@ -386,7 +391,9 @@ def combine(args) -> None:
                 project=target_project,
                 dataset=target_dataset,
                 d1_table=args.target_table,
-                patent_discovery_table=args.patent_discovery_table,
+                patent_project=args.patent_project,
+                patent_dataset=args.patent_dataset,
+                patent_master_table=args.patent_master_table,
                 d2_table=args.d2_table,
                 credentials_path=credentials_path,
             )
