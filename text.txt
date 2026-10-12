@@ -1,0 +1,511 @@
+(cognito) C:\Users\P90022569\Downloads\IP-renew-main>python main.py                   
+
+  [BQ] Downloading Table 1 (forecasted_loe): cognito-prod-394707.cognito_prod_datamart.forecasted_loe ...
+    Rows: 5703 | Columns: 28
+
+  [BQ] Downloading Table 2 (Master_LOE): cognito-prod-394707.cognito_prod_datamart.loe_table_2 ...
+    Rows: 7461 | Columns: 47
+
+  Raw columns in file 1 (forecasted_loe): ['drug_name', 'company', 'global_phase', 'drug_class', 'patent_number', 'tag', 'type', 'step1_claim_category', 'jurisdiction', 'phase_in_jurisdiction', 'likelihood', 'filing_window', 'filing_date_lower', 'rationale', 'strategic_purpose', 'controlling_patent_expiry_year', 'years_to_entry', 'est_approval_year', 'exclusivity_year', 'no_of_forecasted_patents', 'overall_forecast', 'portfolio_gaps', 'risk_assessment', 'existing_patent_summary', 'avg_years_to_entry_us_ep', 'avg_years_to_entry', 'ip_dimension_1_score', 'scored_at']
+  Raw columns in file 2 (Master_LOE):     ['Drug_Name', 'Patent_Number', 'Jurisdiction', 'Tag', 'Blocking_Category', 'Reason', 'Step_1_Claim_Category', 'Step_2_Matched_Elements', 'S2_Active_Ingredient_Form', 'S2_Formulation_Details', 'S2_Route_of_Administration', 'S2_Device_Description', 'S2_Combination_Tech_Process', 'Step_3_Technical_Barrier', 'Step_3_Confidence', 'Step_3_Evidence_Type', 'Step_3_Evidence_Summary', 'Step_4_Blocking_Indicator', 'Step_4_Confidence', 'Step_4_Regulatory_Failure_if_Removed', 'Step_4_Bridging_Studies_Required', 'Step_4_Formulation_Consistent_Across_Phases', 'Step_4_Reason', 'Step_5_Novel_Difficult', 'Step_5_Novelty_Signal', 'Step_5_First_in_Class', 'Step_5_Prior_Failed_Attempts', 'Step_5_Complex_Implementation', 'Step_5_Confidence', 'Step_5_Reason', 'Filing_Date', 'Grant_Date', 'PTE_months', 'Pediatric_Exclusivity', 'Phase', 'Launch_Date', 'Approval_Date', 'Approval_Date_Source', 'Est_Approval_Year', 'Exclusivity_Year', 'Controlling_Patent_Expiry_Year', 'Years_to_Entry', 'Avg_Years_to_Entry', 'Score', 'Avg_Years_to_Entry_US_EP', 'IP_Dimension_1_Score', 'Source_File']
+
+  [BQ] Downloading vw_drug_details_full: cognito-dev-380506.data_mart.vw_drug_details_full ...
+    Rows: 10486 | Columns: 102
+
+  Skipping Table 1 rows for 10 Marketed/Pre-registration drug(s): Albenatide, Benaglutide, Cagrilintide+Semaglutide, Ecnoglutide, Efpeglenatide, Insulin Icodec+Semaglutide, Mazdutide, Olatorepatide, Pegloxenatide, Ribupatide — dropped 834 forecasted row(s).
+
+  Applied 2 manual column alias(es):
+    'global_phase'  ->  'Phase'
+    'filing_date_lower'  ->  'Filing_Date'
+
+  Aligned 12 column name(s) from file 1 to match file 2:
+    'drug_name'  ->  'Drug_Name'
+    'patent_number'  ->  'Patent_Number'
+    'tag'  ->  'Tag'
+    'step1_claim_category'  ->  'Step_1_Claim_Category'
+    'jurisdiction'  ->  'Jurisdiction'
+    'controlling_patent_expiry_year'  ->  'Controlling_Patent_Expiry_Year'
+    'years_to_entry'  ->  'Years_to_Entry'
+    'est_approval_year'  ->  'Est_Approval_Year'
+    'exclusivity_year'  ->  'Exclusivity_Year'
+    'avg_years_to_entry_us_ep'  ->  'Avg_Years_to_Entry_US_EP'
+    'avg_years_to_entry'  ->  'Avg_Years_to_Entry'
+    'ip_dimension_1_score'  ->  'IP_Dimension_1_Score'
+
+  Combined rows: 12330 | Combined columns: 61
+  Filled 7461 blank 'type' value(s) with 'Existing'
+  Set 'Grant_Date' = 'Filing_Date' for 4869 forecasted row(s)
+  Dropped column(s): rationale
+  Stamped 'Avg_Years_to_Entry_US_EP' and 'IP_Dimension_1_Score' from file 1 across all rows.
+  [WARN] 19 drug(s) in file 2 had no match in file 1: Albenatide, Albiglutide, Benaglutide, Cagrilintide+Semaglutide, Dulaglutide, Ecnoglutide, Efpeglenatide, Exenatide, Insulin Degludec+Liraglutide, Insulin Icodec+Semaglutide ...
+
+  Selecting final output columns:
+  'Drug_Name'                         -> 'Drug Name'
+  'Jurisdiction'                      -> 'Jurisdiction'
+  'Tag'                               -> 'Tag'
+  'type'                              -> 'Type'
+  'Filing_Date'                       -> 'Filing Date'
+  'Patent_Number'                     -> 'Patent Number'
+  'no_of_forecasted_patents'          -> 'No Of Forecasted Patents'
+  'Years_to_Entry'                    -> 'Years to Entry'
+  'Avg_Years_to_Entry_US_EP'          -> 'Avg Years to Entry (US & EP)'
+  'IP_Dimension_1_Score'              -> 'IP Dimension 1 Score'
+  'Step_1_Claim_Category'             -> 'Step 1 Claim Category'
+  'Grant_Date'                        -> 'Grant Date'
+  'PTE_months'                        -> 'PTE (months)'
+  'Pediatric_Exclusivity'             -> 'Pediatric Exclusivity'
+  'Controlling_Patent_Expiry_Year'    -> 'Controlling Patent Expiry Year'
+  'Exclusivity_Year'                  -> 'Exclusivity Year'
+  'Approval_Date'                     -> 'Approval Date'
+  'Est_Approval_Year'                 -> 'Est. Approval Year'
+  'Phase'                             -> 'Phase'
+  'strategic_purpose'                 -> 'Strategic Purpose'
+  'risk_assessment'                   -> 'Risk Assessment'
+  'overall_forecast'                  -> 'Overall Forecast'
+  'portfolio_gaps'                    -> 'Portfolio Gaps'
+  'existing_patent_summary'           -> 'Existing Patent Summary'
+  'Blocking_Category'                 -> 'Blocking Category'
+  'Reason'                            -> 'Reason'
+  Kept 28 additional loe_table_2 column(s): Step_2_Matched_Elements, S2_Active_Ingredient_Form, S2_Formulation_Details, S2_Route_of_Administration, S2_Device_Description, S2_Combination_Tech_Process, Step_3_Technical_Barrier, Step_3_Confidence, Step_3_Evidence_Type, Step_3_Evidence_Summary, Step_4_Blocking_Indicator, Step_4_Confidence, Step_4_Regulatory_Failure_if_Removed, Step_4_Bridging_Studies_Required, Step_4_Formulation_Consistent_Across_Phases, Step_4_Reason, Step_5_Novel_Difficult, Step_5_Novelty_Signal, Step_5_First_in_Class, Step_5_Prior_Failed_Attempts, Step_5_Complex_Implementation, Step_5_Confidence, Step_5_Reason, Launch_Date, Approval_Date_Source, Avg_Years_to_Entry, Score, Source_File
+
+  [BQ] Downloading patent_master: cognito-dev-380506.stage.patent_master ...
+    Rows: 11467 | Columns: 40
+  [patent_master] 10114 approved patent row(s) across 123 drug(s) (7920 with a usable expiry_date).
+  [patent_master filter] Dropped 452 existing-patent row(s) not approved in patent_master, across 61 drug(s): Albiglutide, Aleniglipron L-Arginine, Asc-30, Azd-6234+Azd-9550, Azd-9550, Berobenatide, Brenipatide, Buntanetap Tartrate+Dulaglutide, Buntanetap Tartrate+Dulaglutide+Sildenafil Citrate, Cagrilintide+Semaglutide (+51 more)
+  Deduplicated 484 duplicate patent row(s) across 450 patent(s).
+  [reset] Cleared 5 field(s): ['Phase', 'Years to Entry', 'Avg Years to Entry (US & EP)', 'Controlling Patent Expiry Year', 'IP Dimension 1 Score'].
+  [patent_master expiry] From patent_master: 4924 row(s); drug+jurisdiction max (existing rows): 1392 row(s); Filing Date + 20 fallback: 5004 row(s); unresolved: 74 row(s).
+  Calculated 'Years to Entry' for 11316 row(s) (max(Controlling Patent Expiry Year, Exclusivity Year) - 2026); 78 row(s) had no valid expiry.
+
+  [BQ] Downloading clinical_efficacy: cognito-dev-380506.data_mart.clinical_efficacy ...
+    Rows: 5040 | Columns: 27
+  vw_drug_details columns: name='Cleaned_Generic_Name', geo='Drug_Geo_New' (fallback='Drug_Geography'), phase='Highest_Development_Stage'
+
+  [clinical_efficacy + vw_drug_details] Pass 1: overwriting Phase …
+    Phase overwritten for 7610 row(s). No trial data: 2610. No recognised phase: 2679.
+  [clinical_efficacy + vw_drug_details] Pass 2: computing derived fields …
+
+  [clinical_efficacy + vw_drug_details] Recomputed 7610 row(s) (4824 winning phase from vw_drug_details). No trial data — untouched: 2610. No recognised phase — untouched: 2679. No resolvable status/fallback: 0.
+  [LOE columns] name_col='Cleaned_Generic_Name'  geo_col='Drug_Geo_New'  geo_fallback_col='Drug_Geography'  loe_col='LOE_Date'  approval_col='First_Approval_Date'  (all: ['Drug_Id', 'Drug_Name', 'Generic_Name', 'Cleaned_Generic_Name', 'Standard_Generic_name', 'Competing_Products', 'Brand_Name', 'Company_Name', 'Company_Name_UI', 'Other_Partners', 'Parent_Company_Name', 'Therapy_Area', 'Therapy_Area_UI', 'Original_Indication', 'Cleaned_Indication_UI', 'Cleaned_Indication', 'Pipeline_Indication', 'Pipeline_Therapy_Area', 'Development_Stage', 'Drug_Geography', 'Alias_Name', 'Route_of_Administration', 'Original_Target', 'Cleaned_Target', 'Mechanism_of_Action', 'Molecule_Type', 'Gene_Therapy_Vector', 'ATC_Classification', 'Line_of_Therapy', 'Line_of_Therapy_Indication', 'Chemical_Name', 'Chemical_Formula', 'CAS_Number', 'Highest_Development_Stage', 'Drug_Type', 'Drug_Descriptor', 'Application_Type', 'Rare_Disease', 'Lead_Pipeline_Drug', 'Is_Lead_Indication', 'Mechanism_of_Action_Detailed', 'First_in_Class', 'Mono_or_Combination_Drug', 'Sales_Forecast_Y1', 'Sales_Forecast_Y2', 'Sales_Forecast_Y3', 'Sales_Forecast_Y4', 'Sales_Forecast_Y5', 'Sales_Forecast_Y6', 'Sales_Forecast_Y7', 'Estimated_Peak_Sales', 'Estimated_Peak_Sales_Range', 'Review_Designation_FDA', 'PDUFA_Date', 'Designation_Date_FDA', 'Model_Priority', 'Model_Highest_Priority_Drug_Id', 'Five_year_Forecast', 'Direct_Company_Revenue', 'Market_Capitalization_USD_M', 'Independent_Parent_Subsidiary_Joint_Venture', 'Company_Revenue_Mn', 'Phase_Transition_Success_Rate_Drug', 'Deviation_from_Benchmark', 'Portfolio_Wishlist', 'Portfolio_Feedback', 'Best_LOA', 'Best_LOA_Deviation', 'Likelihood_of_Approval_Drug', 'Likelihood_of_Approval_Indication', 'Likelihood_of_Approval_Delta', 'Available_in_IMS', 'Constraining_Patent_Expiry', 'Current_Sales', 'First_Approval_Date', 'Pharmaceutical_Form', 'Strength', 'Dosage_Form_Strength', 'Updated_Date', 'Data_Status', 'Last_Load_Date', 'Data_Source', 'Drug_Geo_New', 'Drug_Geography_UI', 'Development_Stage_Change', 'Estimated_Peak_Sales_Change', 'Best_LOA_Change', 'Likelihood_of_Approval_Indication_Change', 'Review_Designation_FDA_Change', 'Original_Indication_Change', 'Clinical_Trial_Change', 'Total_Count', 'Other_info', 'Categorization', 'Salt_Name', 'Top_Cleaned_Indication', 'Other_Indication', 'LOE_Date', 'Filter_Molecules', 'Updated_highest_development_stage', 'Old_Is_NON_NME', 'Is_NON_NME'])
+
+  [Marketed/Pre-reg approval dates] 5 pair(s) used LOE_Date directly; 12 used First_Approval_Date; 1 kept phase-only estimate (no approval data found).
+  [LOE columns] name_col='Cleaned_Generic_Name'  geo_col='Drug_Geo_New'  geo_fallback_col='Drug_Geography'  loe_col='LOE_Date'  approval_col='First_Approval_Date'  (all: ['Drug_Id', 'Drug_Name', 'Generic_Name', 'Cleaned_Generic_Name', 'Standard_Generic_name', 'Competing_Products', 'Brand_Name', 'Company_Name', 'Company_Name_UI', 'Other_Partners', 'Parent_Company_Name', 'Therapy_Area', 'Therapy_Area_UI', 'Original_Indication', 'Cleaned_Indication_UI', 'Cleaned_Indication', 'Pipeline_Indication', 'Pipeline_Therapy_Area', 'Development_Stage', 'Drug_Geography', 'Alias_Name', 'Route_of_Administration', 'Original_Target', 'Cleaned_Target', 'Mechanism_of_Action', 'Molecule_Type', 'Gene_Therapy_Vector', 'ATC_Classification', 'Line_of_Therapy', 'Line_of_Therapy_Indication', 'Chemical_Name', 'Chemical_Formula', 'CAS_Number', 'Highest_Development_Stage', 'Drug_Type', 'Drug_Descriptor', 'Application_Type', 'Rare_Disease', 'Lead_Pipeline_Drug', 'Is_Lead_Indication', 'Mechanism_of_Action_Detailed', 'First_in_Class', 'Mono_or_Combination_Drug', 'Sales_Forecast_Y1', 'Sales_Forecast_Y2', 'Sales_Forecast_Y3', 'Sales_Forecast_Y4', 'Sales_Forecast_Y5', 'Sales_Forecast_Y6', 'Sales_Forecast_Y7', 'Estimated_Peak_Sales', 'Estimated_Peak_Sales_Range', 'Review_Designation_FDA', 'PDUFA_Date', 'Designation_Date_FDA', 'Model_Priority', 'Model_Highest_Priority_Drug_Id', 'Five_year_Forecast', 'Direct_Company_Revenue', 'Market_Capitalization_USD_M', 'Independent_Parent_Subsidiary_Joint_Venture', 'Company_Revenue_Mn', 'Phase_Transition_Success_Rate_Drug', 'Deviation_from_Benchmark', 'Portfolio_Wishlist', 'Portfolio_Feedback', 'Best_LOA', 'Best_LOA_Deviation', 'Likelihood_of_Approval_Drug', 'Likelihood_of_Approval_Indication', 'Likelihood_of_Approval_Delta', 'Available_in_IMS', 'Constraining_Patent_Expiry', 'Current_Sales', 'First_Approval_Date', 'Pharmaceutical_Form', 'Strength', 'Dosage_Form_Strength', 'Updated_Date', 'Data_Status', 'Last_Load_Date', 'Data_Source', 'Drug_Geo_New', 'Drug_Geography_UI', 'Development_Stage_Change', 'Estimated_Peak_Sales_Change', 'Best_LOA_Change', 'Likelihood_of_Approval_Indication_Change', 'Review_Designation_FDA_Change', 'Original_Indication_Change', 'Clinical_Trial_Change', 'Total_Count', 'Other_info', 'Categorization', 'Salt_Name', 'Top_Cleaned_Indication', 'Other_Indication', 'LOE_Date', 'Filter_Molecules', 'Updated_highest_development_stage', 'Old_Is_NON_NME', 'Is_NON_NME'])
+    [LOE debug] 'Azd-6234+Azd-9550' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Azd-6234+Azd-9550' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Azd-6234+Azd-9550' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Azd-6234+Azd-9550' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Pb-718' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Pb-718' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Pf-08653944' (US): no rows matched by name.
+    [LOE debug] 'Pf-08653944' (EU): no rows matched by name.
+    [LOE debug] 'Acmopatide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, EU, United States']; fallback 'Drug_Geography': ['EU; Global; United States, Global']
+    [LOE debug] 'Acmopatide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Acmopatide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, EU, United States']; fallback 'Drug_Geography': ['EU; Global; United States, Global']
+    [LOE debug] 'Acmopatide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Pemvidutide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, United States']; fallback 'Drug_Geography': ['Global; United States']
+    [LOE debug] 'Pemvidutide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Pemvidutide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, United States']; fallback 'Drug_Geography': ['Global; United States']
+    [LOE debug] 'Pemvidutide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Cotadutide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, United States']; fallback 'Drug_Geography': ['Global; United States']
+    [LOE debug] 'Cotadutide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Cotadutide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, United States']; fallback 'Drug_Geography': ['Global; United States']
+    [LOE debug] 'Cotadutide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Met-224O' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States']; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Met-224O' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Met-224O' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States']; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Berobenatide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Berobenatide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Berobenatide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Berobenatide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Bofanglutide' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Bofanglutide' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Hdm-1005' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Hdm-1005' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Te-8105' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Te-8105' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Te-8105' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Te-8105' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Hs-10501' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Hs-10501' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Lotiglipron' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Lotiglipron' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Lotiglipron' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Lotiglipron' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Mrank-001' (US): no rows matched by name.
+    [LOE debug] 'Mrank-001' (EU): no rows matched by name.
+    [LOE debug] 'Ray-1225' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Ray-1225' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Mwn-109' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Mwn-109' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Gsbr-1290' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States']; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Gsbr-1290' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Gsbr-1290' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States']; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Thdbh-120' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Thdbh-120' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Vk-2735' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Vk-2735' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Vk-2735' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Vk-2735' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Liraglutide Biobetter' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Liraglutide Biobetter' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Liraglutide Biobetter' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Liraglutide Biobetter' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Bgm-0504' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['China, Global']; fallback 'Drug_Geography': ['China, China; Global']
+    [LOE debug] 'Bgm-0504' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Bgm-0504' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['China, Global']; fallback 'Drug_Geography': ['China, China; Global']
+    [LOE debug] 'Bgm-0504' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Enicepatide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, China, EU, United States, Japan']; fallback 'Drug_Geography': ['Global, Japan, China; EU; Global; United States']
+    [LOE debug] 'Enicepatide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Enicepatide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, China, EU, United States, Japan']; fallback 'Drug_Geography': ['Global, Japan, China; EU; Global; United States']
+    [LOE debug] 'Enicepatide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Da-302168S' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Da-302168S' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Dd-01' (US): no rows matched by name.
+    [LOE debug] 'Dd-01' (EU): no rows matched by name.
+    [LOE debug] 'Efinopegdutide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['China, Japan, United States, Global']; fallback 'Drug_Geography': ['China; Japan; United States, Global']
+    [LOE debug] 'Efinopegdutide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Efinopegdutide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['China, Japan, United States, Global']; fallback 'Drug_Geography': ['China; Japan; United States, Global']
+    [LOE debug] 'Efinopegdutide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Rose-010' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Rose-010' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Rose-010' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Rose-010' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Mirikizumab+Tirzepatide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': [None]; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Mirikizumab+Tirzepatide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Mirikizumab+Tirzepatide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': [None]; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Mirikizumab+Tirzepatide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Pegapamodutide' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China, Indonesia']; fallback 'Drug_Geography': ['China; Indonesia']
+    [LOE debug] 'Pegapamodutide' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China, Indonesia']; fallback 'Drug_Geography': ['China; Indonesia']
+    [LOE debug] 'Hs-20004' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Hs-20004' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Nn-9490' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Nn-9490' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Nn-9490' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Nn-9490' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Met-097I+Met-233I' (US): no rows matched by name.
+    [LOE debug] 'Met-097I+Met-233I' (EU): no rows matched by name.
+    [LOE debug] 'Rgt-075' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States']; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Rgt-075' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Rgt-075' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States']; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Ct-996' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Ct-996' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Ct-996' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Ct-996' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Aleniglipron L-Arginine' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States']; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Aleniglipron L-Arginine' (US): raw 'LOE_Date'='2042' -> year=2042.0
+    [LOE debug] 'Aleniglipron L-Arginine' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States']; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Ubt-251' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Ubt-251' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Vct-220' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Vct-220' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Buntanetap Tartrate+Dulaglutide+Sildenafil Citrate' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': [None]; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Buntanetap Tartrate+Dulaglutide+Sildenafil Citrate' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Buntanetap Tartrate+Dulaglutide+Sildenafil Citrate' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': [None]; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Buntanetap Tartrate+Dulaglutide+Sildenafil Citrate' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Buntanetap Tartrate+Dulaglutide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': [None]; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Buntanetap Tartrate+Dulaglutide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Buntanetap Tartrate+Dulaglutide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': [None]; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Buntanetap Tartrate+Dulaglutide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Asc-30' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, United States']; fallback 'Drug_Geography': ['Global; United States']
+    [LOE debug] 'Asc-30' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Asc-30' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, United States']; fallback 'Drug_Geography': ['Global; United States']
+    [LOE debug] 'Asc-30' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Azd-9550' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['China, EU, Global']; fallback 'Drug_Geography': ['China; EU; Global']
+    [LOE debug] 'Azd-9550' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Azd-9550' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['China, EU, Global']; fallback 'Drug_Geography': ['China; EU; Global']
+    [LOE debug] 'Azd-9550' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Sl-209' (US): no rows matched by name.
+    [LOE debug] 'Sl-209' (EU): no rows matched by name.
+    [LOE debug] 'Na-931' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, United States']; fallback 'Drug_Geography': ['Global, Global; United States']
+    [LOE debug] 'Na-931' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Na-931' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, United States']; fallback 'Drug_Geography': ['Global, Global; United States']
+    [LOE debug] 'Na-931' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Survodutide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, Japan, China, EU, Taiwan, United States']; fallback 'Drug_Geography': ['China; Global; Japan, China; EU; Global; Taiwan; United States, Global, Global; Japan, Global; United States']
+    [LOE debug] 'Survodutide' (US): raw 'LOE_Date'='2041' -> year=2041.0
+    [LOE debug] 'Survodutide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, Japan, China, EU, Taiwan, United States']; fallback 'Drug_Geography': ['China; Global; Japan, China; EU; Global; Taiwan; United States, Global, Global; Japan, Global; United States']
+    [LOE debug] 'Survodutide' (EU): raw 'LOE_Date'='2041' -> year=2041.0
+    [LOE debug] 'Dapiglutide' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['EU']; fallback 'Drug_Geography': ['EU']
+    [LOE debug] 'Dapiglutide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['EU']; fallback 'Drug_Geography': ['EU']
+    [LOE debug] 'Dapiglutide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Elecoglipron' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, Japan, United States, China']; fallback 'Drug_Geography': ['Global, China, Global; Japan; United States']
+    [LOE debug] 'Elecoglipron' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Elecoglipron' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, Japan, United States, China']; fallback 'Drug_Geography': ['Global, China, Global; Japan; United States']
+    [LOE debug] 'Elecoglipron' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Retatrutide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, EU, India, United States']; fallback 'Drug_Geography': ['EU; Global, Global, Global; India; United States']
+    [LOE debug] 'Retatrutide' (US): raw 'LOE_Date'='2040' -> year=2040.0
+    [LOE debug] 'Retatrutide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, EU, India, United States']; fallback 'Drug_Geography': ['EU; Global, Global, Global; India; United States']
+    [LOE debug] 'Retatrutide' (EU): raw 'LOE_Date'='2040' -> year=2040.0
+    [LOE debug] 'Ixekizumab+Tirzepatide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': [None]; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Ixekizumab+Tirzepatide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Ixekizumab+Tirzepatide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': [None]; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Ixekizumab+Tirzepatide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Brenipatide' (US): 2 name-matched, 2 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global', 'Global']; fallback 'Drug_Geography': ['Global', 'Global']
+    [LOE debug] 'Brenipatide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Brenipatide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Brenipatide' (EU): 2 name-matched, 2 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global', 'Global']; fallback 'Drug_Geography': ['Global', 'Global']
+    [LOE debug] 'Brenipatide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Brenipatide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Efocipegtrutide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, United States']; fallback 'Drug_Geography': ['Global; United States']
+    [LOE debug] 'Efocipegtrutide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Efocipegtrutide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, United States']; fallback 'Drug_Geography': ['Global; United States']
+    [LOE debug] 'Efocipegtrutide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Hm-15275' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, United States']; fallback 'Drug_Geography': ['United States, Global']
+    [LOE debug] 'Hm-15275' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Hm-15275' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, United States']; fallback 'Drug_Geography': ['United States, Global']
+    [LOE debug] 'Hm-15275' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Hdm-1002' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Hdm-1002' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'TE-8105' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'TE-8105' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'TE-8105' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'TE-8105' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Pegsebrenatide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States, Global']; fallback 'Drug_Geography': ['United States, Global']
+    [LOE debug] 'Pegsebrenatide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Pegsebrenatide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States, Global']; fallback 'Drug_Geography': ['United States, Global']
+    [LOE debug] 'Pegsebrenatide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Semaglutide Biosimilar' (US): 2 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['China', 'Global']; fallback 'Drug_Geography': ['China', 'Global']
+    [LOE debug] 'Semaglutide Biosimilar' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Semaglutide Biosimilar' (EU): 2 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['China', 'Global']; fallback 'Drug_Geography': ['China', 'Global']
+    [LOE debug] 'Semaglutide Biosimilar' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Zenagamtide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, China, EU, India, South Korea']; fallback 'Drug_Geography': ['Global, China; EU; Global; India; South Korea']
+    [LOE debug] 'Zenagamtide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Zenagamtide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, China, EU, India, South Korea']; fallback 'Drug_Geography': ['Global, China; EU; Global; India; South Korea']
+    [LOE debug] 'Zenagamtide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Pb-119' (US): no rows matched by name.
+    [LOE debug] 'Pb-119' (EU): no rows matched by name.
+    [LOE debug] 'Zovaglutide' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Zovaglutide' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Hrs-7535' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Hrs-7535' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Sal-0112' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Sal-0112' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Utreglutide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, India']; fallback 'Drug_Geography': ['Global, Global; India']
+    [LOE debug] 'Utreglutide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Utreglutide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global, India']; fallback 'Drug_Geography': ['Global, Global; India']
+    [LOE debug] 'Utreglutide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Tern-601' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Tern-601' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Tern-601' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Tern-601' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Vurolenatide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States']; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Vurolenatide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Vurolenatide' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States']; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Uni-E4' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Uni-E4' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Ttp-273' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States']; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Ttp-273' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Ttp-273' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States']; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Naperiglipron Erbumine' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Naperiglipron Erbumine' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Naperiglipron Erbumine' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global']; fallback 'Drug_Geography': ['Global']
+    [LOE debug] 'Naperiglipron Erbumine' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Albenatide' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': [None]; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Albenatide' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': [None]; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Albiglutide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Austria, United States']; fallback 'Drug_Geography': ['United States, Austria']
+    [LOE debug] 'Albiglutide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Albiglutide' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['Austria, United States']; fallback 'Drug_Geography': ['United States, Austria']
+    [LOE debug] 'Benaglutide' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Benaglutide' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Cagrilintide+Semaglutide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': [None]; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Cagrilintide+Semaglutide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Cagrilintide+Semaglutide' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': [None]; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Dulaglutide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Canada, New Zealand, Brazil, France, South Africa, Indonesia, Denmark, Australia, South Korea, United States, Italy, Spain, Belgium, Japan, Germany, Russia, Austria, EU, Israel, India, United Kingdom, China, Mexico, Switzerland']; fallback 'Drug_Geography': ['South Africa, United States, Australia, Italy, Russia, Canada, France, Belgium, India, United Kingdom, Denmark, South Korea, Israel, Mexico, Austria; EU, Brazil, Indonesia, Spain, Germany, New Zealand, Japan, China, Switzerland']
+    [LOE debug] 'Dulaglutide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Dulaglutide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Canada, New Zealand, Brazil, France, South Africa, Indonesia, Denmark, Australia, South Korea, United States, Italy, Spain, Belgium, Japan, Germany, Russia, Austria, EU, Israel, India, United Kingdom, China, Mexico, Switzerland']; fallback 'Drug_Geography': ['South Africa, United States, Australia, Italy, Russia, Canada, France, Belgium, India, United Kingdom, Denmark, South Korea, Israel, Mexico, Austria; EU, Brazil, Indonesia, Spain, Germany, New Zealand, Japan, China, Switzerland']
+    [LOE debug] 'Dulaglutide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Ecnoglutide' (US): 3 name-matched, 2 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global', 'China', 'Global, China']; fallback 'Drug_Geography': ['Global', 'China', 'China, Global']
+    [LOE debug] 'Ecnoglutide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Ecnoglutide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Ecnoglutide' (EU): 3 name-matched, 2 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global', 'China', 'Global, China']; fallback 'Drug_Geography': ['Global', 'China', 'China, Global']
+    [LOE debug] 'Ecnoglutide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Ecnoglutide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Efpeglenatide' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['South Korea']; fallback 'Drug_Geography': ['South Korea']
+    [LOE debug] 'Efpeglenatide' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['South Korea']; fallback 'Drug_Geography': ['South Korea']
+    [LOE debug] 'Exenatide' (US): 5 name-matched, 4 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States', 'Global', 'United States', 'South Korea, France', 'Japan, Italy, China, India, Spain, Belgium, Indonesia, United States, Russia, Mexico, Canada, Germany, Australia, Denmark, United Kingdom, France, South Africa, Austria, EU, Switzerland']; fallback 'Drug_Geography': ['United States', 'Global', 'United States', 'France, South Korea', 'United States, France, China, India, Indonesia, Germany, Switzerland, Mexico, South Africa, Austria; EU, United Kingdom, Spain, Belgium, Russia, Australia, Japan, Italy, Canada, Denmark']
+    [LOE debug] 'Exenatide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Exenatide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Exenatide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Exenatide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Exenatide' (EU): 5 name-matched, 2 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States', 'Global', 'United States', 'South Korea, France', 'Japan, Italy, China, India, Spain, Belgium, Indonesia, United States, Russia, Mexico, Canada, Germany, Australia, Denmark, United Kingdom, France, South Africa, Austria, EU, Switzerland']; fallback 'Drug_Geography': ['United States', 'Global', 'United States', 'France, South Korea', 'United States, France, China, India, Indonesia, Germany, Switzerland, Mexico, South Africa, Austria; EU, United Kingdom, Spain, Belgium, Russia, Australia, Japan, Italy, Canada, Denmark']
+    [LOE debug] 'Exenatide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Exenatide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Insulin Degludec+Liraglutide' (US): 3 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['China', 'China', 'South Africa, Belgium, South Korea, France, Mexico, China, Italy, India, Switzerland, Israel, Spain, Japan, Canada, Austria, Germany, United Kingdom, United States, Russia, Denmark, EU, Brazil, Indonesia, Australia']; fallback 'Drug_Geography': ['China', 'China', 'Indonesia, South Africa, Italy, India, Switzerland, Canada, Belgium, France, Spain, Israel, Brazil, Mexico, China, Denmark; EU, Austria; Germany, Russia, South Korea, Japan, Australia, United Kingdom; United States']
+    [LOE debug] 'Insulin Degludec+Liraglutide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Insulin Degludec+Liraglutide' (EU): 3 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['China', 'China', 'South Africa, Belgium, South Korea, France, Mexico, China, Italy, India, Switzerland, Israel, Spain, Japan, Canada, Austria, Germany, United Kingdom, United States, Russia, Denmark, EU, Brazil, Indonesia, Australia']; fallback 'Drug_Geography': ['China', 'China', 'Indonesia, South Africa, Italy, India, Switzerland, Canada, Belgium, France, Spain, Israel, Brazil, Mexico, China, Denmark; EU, Austria; Germany, Russia, South Korea, Japan, Australia, United Kingdom; United States']
+    [LOE debug] 'Insulin Degludec+Liraglutide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Insulin Icodec+Semaglutide' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['Italy, China, Austria, Germany, South Korea, Spain, Denmark, Belgium, EU, France, Japan']; fallback 'Drug_Geography': ['Italy, China, South Korea, Denmark, Germany, Japan, Austria, Spain, France, Belgium; EU']
+    [LOE debug] 'Insulin Icodec+Semaglutide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['Italy, China, Austria, Germany, South Korea, Spain, Denmark, Belgium, EU, France, Japan']; fallback 'Drug_Geography': ['Italy, China, South Korea, Denmark, Germany, Japan, Austria, Spain, France, Belgium; EU']
+    [LOE debug] 'Insulin Icodec+Semaglutide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Liraglutide' (US): 7 name-matched, 3 jurisdiction-matched. Raw 'Drug_Geo_New': ['China', 'China', 'China', 'Mexico, Austria, Italy, United States, France, Canada, United Kingdom, Denmark, EU, Germany, Spain, Indonesia, South Africa, Israel, Switzerland, South Korea, New Zealand, Brazil, Australia, Russia, Belgium', 'United States, Belgium, Canada', 'Japan, United Kingdom, Australia, Mexico, New Zealand, Italy, China, Canada, France, Denmark, EU, Germany, South Africa, Indonesia, South Korea, United States, Spain, India, Israel, Belgium, Russia, Switzerland, Brazil, Austria', 'Brazil']; fallback 'Drug_Geography': ['China', 'China', 'China', 'Israel, Belgium, New Zealand, Australia, France, South Korea, Mexico, Italy, United Kingdom, Canada, Denmark; EU; Germany; Spain, United States, Indonesia, South Africa, Austria, Switzerland, Russia, Brazil', 'United States, Belgium; Canada', 'United Kingdom, Switzerland, Brazil, Mexico, Canada, Russia, Italy, United States, Japan, France, South Africa, India, Belgium, China, Indonesia, Austria, Australia, New Zealand, Denmark; EU; Germany, Spain, South Korea, Israel', 'Brazil']
+    [LOE debug] 'Liraglutide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Liraglutide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Liraglutide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Liraglutide' (EU): 7 name-matched, 2 jurisdiction-matched. Raw 'Drug_Geo_New': ['China', 'China', 'China', 'Mexico, Austria, Italy, United States, France, Canada, United Kingdom, Denmark, EU, Germany, Spain, Indonesia, South Africa, Israel, Switzerland, South Korea, New Zealand, Brazil, Australia, Russia, Belgium', 'United States, Belgium, Canada', 'Japan, United Kingdom, Australia, Mexico, New Zealand, Italy, China, Canada, France, Denmark, EU, Germany, South Africa, Indonesia, South Korea, United States, Spain, India, Israel, Belgium, Russia, Switzerland, Brazil, Austria', 'Brazil']; fallback 'Drug_Geography': ['China', 'China', 'China', 'Israel, Belgium, New Zealand, Australia, France, South Korea, Mexico, Italy, United Kingdom, Canada, Denmark; EU; Germany; Spain, United States, Indonesia, South Africa, Austria, Switzerland, Russia, Brazil', 'United States, Belgium; Canada', 'United Kingdom, Switzerland, Brazil, Mexico, Canada, Russia, Italy, United States, Japan, France, South Africa, India, Belgium, China, Indonesia, Austria, Australia, New Zealand, Denmark; EU; Germany, Spain, South Korea, Israel', 'Brazil']
+    [LOE debug] 'Liraglutide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Liraglutide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Lixisenatide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['India, Austria, Germany, Denmark, China, Switzerland, Belgium, Spain, South Korea, Russia, Indonesia, Canada, Brazil, EU, Italy, United Kingdom, United States, Mexico, Japan, France']; fallback 'Drug_Geography': ['Indonesia, Russia, India, Denmark, Switzerland, Belgium; Spain, South Korea, Canada, Austria; Germany, China']
+    [LOE debug] 'Lixisenatide' (US): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Lixisenatide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['India, Austria, Germany, Denmark, China, Switzerland, Belgium, Spain, South Korea, Russia, Indonesia, Canada, Brazil, EU, Italy, United Kingdom, United States, Mexico, Japan, France']; fallback 'Drug_Geography': ['Indonesia, Russia, India, Denmark, Switzerland, Belgium; Spain, South Korea, Canada, Austria; Germany, China']
+    [LOE debug] 'Lixisenatide' (EU): raw 'LOE_Date'='' -> year=None
+    [LOE debug] 'Mazdutide' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Mazdutide' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Olatorepatide' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Olatorepatide' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Orforglipron Calcium' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States']; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Orforglipron Calcium' (US): raw 'LOE_Date'='2040' -> year=2040.0
+    [LOE debug] 'Orforglipron Calcium' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['United States']; fallback 'Drug_Geography': ['United States']
+    [LOE debug] 'Pegloxenatide' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Pegloxenatide' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Ribupatide' (US): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Ribupatide' (EU): 1 name-matched, 0 jurisdiction-matched. Raw 'Drug_Geo_New': ['China']; fallback 'Drug_Geography': ['China']
+    [LOE debug] 'Semaglutide' (US): 26 name-matched, 7 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global', 'United States', 'Global', 'Global', 'China', 'China', 'China', 'China', 'China', 'China', 'Global', 'India', 'India', 'China', 'China', 'China', 'China', 'Global', 'China', 'China', 'China', 'China', 'Russia', 'China', 'China', 'Canada, South Korea, United States, Mexico, Brazil, Australia, South Africa, Japan, Russia, Switzerland, China, Indonesia, Israel, Belgium, Germany, Italy, Austria, Denmark, EU, France, Spain, United Kingdom, India']; fallback 'Drug_Geography': ['Global', 'United States', 'Global', 'Global', 'China', 'China', 'China', 'China', 'China', 'China', 'Global', 'India', 'India', 'China', 'China', 'China', 'China', 'Global', 'China', 'China', 'China', 'China', 'Russia', 'China', 'China', 'South Africa, Germany, France, Spain, United Kingdom, Belgium, India, Canada, Switzerland, China, Israel, Brazil, Australia, Japan, Russia, Austria; Denmark; EU, Mexico, Italy, Indonesia, South Korea, United States']
+    [LOE debug] 'Semaglutide' (US): raw 'LOE_Date'='2031' -> year=2031.0
+    [LOE debug] 'Semaglutide' (EU): 26 name-matched, 6 jurisdiction-matched. Raw 'Drug_Geo_New': ['Global', 'United States', 'Global', 'Global', 'China', 'China', 'China', 'China', 'China', 'China', 'Global', 'India', 'India', 'China', 'China', 'China', 'China', 'Global', 'China', 'China', 'China', 'China', 'Russia', 'China', 'China', 'Canada, South Korea, United States, Mexico, Brazil, Australia, South Africa, Japan, Russia, Switzerland, China, Indonesia, Israel, Belgium, Germany, Italy, Austria, Denmark, EU, France, Spain, United Kingdom, India']; fallback 'Drug_Geography': ['Global', 'United States', 'Global', 'Global', 'China', 'China', 'China', 'China', 'China', 'China', 'Global', 'India', 'India', 'China', 'China', 'China', 'China', 'Global', 'China', 'China', 'China', 'China', 'Russia', 'China', 'China', 'South Africa, Germany, France, Spain, United Kingdom, Belgium, India, Canada, Switzerland, China, Israel, Brazil, Australia, Japan, Russia, Austria; Denmark; EU, Mexico, Italy, Indonesia, South Korea, United States']
+    [LOE debug] 'Semaglutide' (EU): raw 'LOE_Date'='2031' -> year=2031.0
+    [LOE debug] 'Tirzepatide' (US): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['France, United Kingdom, South Africa, Spain, Israel, Japan, New Zealand, Switzerland, Austria, EU, United States, Italy, Belgium, Indonesia, Denmark, Germany, Canada, Brazil, Mexico, India, Australia, China, South Korea']; fallback 'Drug_Geography': ['New Zealand, Canada, United Kingdom, Germany, South Africa, India, Spain, Brazil, Australia, Israel, Denmark, Mexico, China, South Korea, Italy, France, Switzerland, Austria; EU; United Kingdom; United States, Belgium, Austria; Belgium; EU; Indonesia; United States, Japan, United States']
+    [LOE debug] 'Tirzepatide' (US): raw 'LOE_Date'='2040' -> year=2040.0
+    [LOE debug] 'Tirzepatide' (EU): 1 name-matched, 1 jurisdiction-matched. Raw 'Drug_Geo_New': ['France, United Kingdom, South Africa, Spain, Israel, Japan, New Zealand, Switzerland, Austria, EU, United States, Italy, Belgium, Indonesia, Denmark, Germany, Canada, Brazil, Mexico, India, Australia, China, South Korea']; fallback 'Drug_Geography': ['New Zealand, Canada, United Kingdom, Germany, South Africa, India, Spain, Brazil, Australia, Israel, Denmark, Mexico, China, South Korea, Italy, France, Switzerland, Austria; EU; United Kingdom; United States, Belgium, Austria; Belgium; EU; Indonesia; United States, Japan, United States']
+    [LOE debug] 'Tirzepatide' (EU): raw 'LOE_Date'='2040' -> year=2040.0
+
+  [Years to Entry / Avg override] Recomputed YTE for 518 row(s) and Avg YTE for 6 drug(s) from LOE_Date.
+
+  [Avg/IP Dimension fallback] 78 drug(s) missing from forecasted_loe. Calculated fallback for 78. All filled.
+
+  Saved: C:\Users\P90022569\Downloads\IP-renew-main\combined_master_loe.xlsx
+  Total rows: 11394 | Total columns: 54
+  [BQ] Table cognito-dev-380506.data_mart.a1 exists — loading per write_disposition='WRITE_TRUNCATE'.
+
+  Column names prepared for BigQuery:
+    'Drug_Name'                          <-- renamed
+    'Jurisdiction'                     
+    'Tag'                              
+    'Type'                             
+    'Filing_Date'                        <-- renamed
+    'Patent_Number'                      <-- renamed
+    'No_Of_Forecasted_Patents'           <-- renamed
+    'Years_to_Entry'                     <-- renamed
+    'Avg_Years_to_Entry_US_EP'           <-- renamed
+    'IP_Dimension_1_Score'               <-- renamed
+    'Step_1_Claim_Category'              <-- renamed
+    'Grant_Date'                         <-- renamed
+    'PTE_months'                         <-- renamed
+    'Pediatric_Exclusivity'              <-- renamed
+    'Controlling_Patent_Expiry_Year'     <-- renamed
+    'Exclusivity_Year'                   <-- renamed
+    'Approval_Date'                      <-- renamed
+    'Est_Approval_Year'                  <-- renamed
+    'Phase'                            
+    'Strategic_Purpose'                  <-- renamed
+    'Risk_Assessment'                    <-- renamed
+    'Overall_Forecast'                   <-- renamed
+    'Portfolio_Gaps'                     <-- renamed
+    'Existing_Patent_Summary'            <-- renamed
+    'Blocking_Category'                  <-- renamed
+    'Reason'                           
+    'Step_2_Matched_Elements'          
+    'S2_Active_Ingredient_Form'        
+    'S2_Formulation_Details'           
+    'S2_Route_of_Administration'       
+    'S2_Device_Description'            
+    'S2_Combination_Tech_Process'      
+    'Step_3_Technical_Barrier'         
+    'Step_3_Confidence'                
+    'Step_3_Evidence_Type'             
+    'Step_3_Evidence_Summary'          
+    'Step_4_Blocking_Indicator'        
+    'Step_4_Confidence'                
+    'Step_4_Regulatory_Failure_if_Removed'
+    'Step_4_Bridging_Studies_Required' 
+    'Step_4_Formulation_Consistent_Across_Phases'
+    'Step_4_Reason'                    
+    'Step_5_Novel_Difficult'           
+    'Step_5_Novelty_Signal'            
+    'Step_5_First_in_Class'            
+    'Step_5_Prior_Failed_Attempts'     
+    'Step_5_Complex_Implementation'    
+    'Step_5_Confidence'                
+    'Step_5_Reason'                    
+    'Launch_Date'                      
+    'Approval_Date_Source'             
+    'Avg_Years_to_Entry'               
+    'Score'                            
+    'Source_File'                      
+
+  [BQ] Uploading 11394 row(s) / 54 col(s) to cognito-dev-380506.data_mart.a1 (write_disposition=WRITE_TRUNCATE) ...
+  [BQ] Done — cognito-dev-380506.data_mart.a1 now has 11394 row(s) and 54 column(s).
+
+  [d2] Building 'a2' from 'a1' + 'patent_master' ...
+
+  [BQ] Downloading a1: cognito-dev-380506.data_mart.a1 ...
+    Rows: 11394 | Columns: 54
+
+  [BQ] Downloading patent_master: cognito-dev-380506.stage.patent_master ...
+    Rows: 11467 | Columns: 40
+  [patent_master] 10114 approved patent row(s) across 123 drug(s) (7920 with a usable expiry_date).
+  [d2] Matched 4924/11394 rows to patent_master on drug + patent_number.
+  [d2] Existing rows: 'Controlling_Patent_Expiry_Year' = patent_master expiry_date year for 4924/6525 rows.
+  [d2] Forecasted rows: 'Controlling_Patent_Expiry_Year' = Filing_Year + 20 for 4869/4869 rows.
+  [d2] Recalculated 'Years_to_Entry' for 10880 rows.
+
+  [d2] Avg YTE / IP Dimension Score updated for 84/84 drug(s).
+  [BQ] Table cognito-dev-380506.data_mart.a2 exists — loading per write_disposition='WRITE_TRUNCATE'.
+
+  Column names prepared for BigQuery:
+    'Drug_Name'                        
+    'Jurisdiction'                     
+    'Tag'                              
+    'Type'                             
+    'Filing_Date'                      
+    'Patent_Number'                    
+    'No_Of_Forecasted_Patents'         
+    'Years_to_Entry'                   
+    'Avg_Years_to_Entry_US_EP'         
+    'IP_Dimension_1_Score'             
+    'Step_1_Claim_Category'            
+    'Grant_Date'                       
+    'PTE_months'                       
+    'Pediatric_Exclusivity'            
+    'Controlling_Patent_Expiry_Year'   
+    'Exclusivity_Year'                 
+    'Approval_Date'                    
+    'Est_Approval_Year'                
+    'Phase'                            
+    'Strategic_Purpose'                
+    'Risk_Assessment'                  
+    'Overall_Forecast'                 
+    'Portfolio_Gaps'                   
+    'Existing_Patent_Summary'          
+    'Blocking_Category'                
+    'Reason'                           
+    'Step_2_Matched_Elements'          
+    'S2_Active_Ingredient_Form'        
+    'S2_Formulation_Details'           
+    'S2_Route_of_Administration'       
+    'S2_Device_Description'            
+    'S2_Combination_Tech_Process'      
+    'Step_3_Technical_Barrier'         
+    'Step_3_Confidence'                
+    'Step_3_Evidence_Type'             
+    'Step_3_Evidence_Summary'          
+    'Step_4_Blocking_Indicator'        
+    'Step_4_Confidence'                
+    'Step_4_Regulatory_Failure_if_Removed'
+    'Step_4_Bridging_Studies_Required' 
+    'Step_4_Formulation_Consistent_Across_Phases'
+    'Step_4_Reason'                    
+    'Step_5_Novel_Difficult'           
+    'Step_5_Novelty_Signal'            
+    'Step_5_First_in_Class'            
+    'Step_5_Prior_Failed_Attempts'     
+    'Step_5_Complex_Implementation'    
+    'Step_5_Confidence'                
+    'Step_5_Reason'                    
+    'Launch_Date'                      
+    'Approval_Date_Source'             
+    'Avg_Years_to_Entry'               
+    'Score'                            
+    'Source_File'                      
+
+  [BQ] Uploading 11394 row(s) / 54 col(s) to cognito-dev-380506.data_mart.a2 (write_disposition=WRITE_TRUNCATE) ...
+  [BQ] Done — cognito-dev-380506.data_mart.a2 now has 11394 row(s) and 54 column(s).
+  [d2] Done — 'a2' written (11394 rows, 54 columns)
