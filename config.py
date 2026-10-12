@@ -8,22 +8,36 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 # ── BigQuery defaults ─────────────────────────────────────────────────────────
-# BQ_PROJECT / BQ_DATASET / D1_TABLE / D2_TABLE can be set in .env so you don't
-# have to pass --project/--dataset/--target-table/--d2-table on every run.
+# Source tables (forecasted_loe / loe_table_2). BQ_PROJECT / BQ_DATASET can be
+# set in .env so you don't have to pass --project/--dataset on every run.
 # CLI flags, when given, still take priority over these (and over .env).
 DEFAULT_BQ_PROJECT      = os.getenv("BQ_PROJECT", "cognito-prod-394707")
 DEFAULT_BQ_DATASET      = os.getenv("BQ_DATASET", "cognito_prod_datamart")
 DEFAULT_FORECAST_TABLE  = "forecasted_loe"
 DEFAULT_MASTER_TABLE    = "loe_table_2"
+
+# d1/d2 output location. Independent of the source project/dataset above —
+# set TARGET_PROJECT/TARGET_DATASET in .env when d1/d2 live somewhere else.
+# Left unset (None), pipeline.py falls back to the source project/dataset,
+# same as before this was configurable.
+DEFAULT_TARGET_PROJECT  = os.getenv("TARGET_PROJECT") or None
+DEFAULT_TARGET_DATASET  = os.getenv("TARGET_DATASET") or None
 DEFAULT_TARGET_TABLE    = os.getenv("D1_TABLE", "d1")
-DEFAULT_PATENT_DISCOVERY_TABLE = "patent_discovery"
 DEFAULT_D2_TABLE        = os.getenv("D2_TABLE", "d2")
 
-# patent_master — the approved-patent shortlist. A patent row is only used
-# for downstream computation (dedup, expiry sourcing, Years to Entry, d2)
-# when patent_master marks it patent_status = 'PDF Downloaded' and
-# confidence > 0.3 for that drug/molecule. Mirrors
-# IP_refactored.chunking.patent_filter's approval criteria.
+# patent_master location. Independent of BOTH the source tables above AND
+# the d1/d2 target location — it lives in its own project/dataset regardless
+# of where either of those move.
+DEFAULT_PATENT_PROJECT  = os.getenv("PATENT_PROJECT", "cognito-dev-380506")
+DEFAULT_PATENT_DATASET  = os.getenv("PATENT_DATASET", "stage")
+
+# patent_master is the SOLE patent-level data source (patent_discovery is not
+# used anywhere in this pipeline). A patent row is only used for downstream
+# computation (dedup, expiry sourcing, Years to Entry, d2) when patent_master
+# marks it patent_status = 'PDF Downloaded' and confidence > 0.3 for that
+# drug/molecule (mirrors IP_refactored.chunking.patent_filter's approval
+# criteria), and Controlling Patent Expiry Year is sourced from its own
+# expiry_date column (ISO 8601) rather than from any separate expiry table.
 DEFAULT_PATENT_MASTER_TABLE = "patent_master"
 
 # Service account JSON path — loaded from .env; --credentials on the CLI overrides this.
