@@ -2,102 +2,108 @@
 patents.py — Patent-level data transforms:
   - Restricting patent rows to the patent_master-approved shortlist
   - Deduplication of patents recorded under multiple number formats
-  - Filling blank Controlling Patent Expiry Year from patent_discovery / Filing Date
-  - Building the d2 table (d1 + patent_discovery enrichment)
+  - Filling blank Controlling Patent Expiry Year from patent_master.expiry_date
+    (matched by drug + Patent Number) / Filing Date
+  - Building the d2 table (d1 + patent_master enrichment)
+
+patent_discovery is no longer used anywhere in this module — patent_master
+is now the single source for both the approval shortlist and the expiry
+date (it carries molecule_name, patent_number, patent_status, confidence,
+AND expiry_date; the expiry_date field is ISO 8601).
 """
 
 import re
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Optional
 
 import numpy as np
 import pandas as pd
-from google.cloud import bigquery
 
 from utils import (
-    _find_col, _normalize_patent_number, _is_blank, _filing_year,
-    _jurisdiction_token, _ip_dimension_score,
+    _find_col, _normalize_patent_number, _normalize_drug_str,
+    _is_blank, _filing_year, _jurisdiction_token, _ip_dimension_score,
 )
-from bq_io import _bq_client, _load_table_from_bq, _upload_to_bigquery
+from bq_io import _load_table_from_bq, _upload_to_bigquery
 
 
-# ── patent_master approval filter ─────────────────────────────────────────────
+# ── Shared date parsing ────────────────────────────────────────────────────────
+
+def _expiry_year_from_date(val):
+    """Extract a calendar year from an ISO 8601 (or pandas Timestamp) expiry
+    value. Works for 'YYYY-MM-DD...' strings since the year leads the string."""
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return np.nan
+    if isinstance(val, pd.Timestamp):
+        return float(val.year) if not pd.isna(val) else np.nan
+    m = re.match(r"(\d{4})", str(val).strip())
+    return float(m.group(1)) if m else np.nan
+
+
+# ── patent_master: load + filter once, shared by the approval filter and the
+#    expiry sourcing below ──────────────────────────────────────────────────
 # Mirrors IP_refactored.chunking.patent_filter.get_approved_patent_numbers: a
 # patent is only "approved" when patent_status = 'PDF Downloaded' and
 # confidence > 0.3. Everything downstream (dedup, expiry sourcing, Years to
 # Entry, d2) should only ever see this shortlisted set.
 
-_PATENT_MASTER_QUERY_BY_MOLECULES = """
-SELECT molecule_name, patent_number
-FROM `{table}`
-WHERE lower(molecule_name) IN UNNEST(@molecule_names)
-AND patent_status = 'PDF Downloaded'
-AND confidence > 0.3
-"""
+def _load_patent_master_approved(patent_master_df: Optional[pd.DataFrame]) -> pd.DataFrame:
+    """Filter the raw patent_master table down to approved rows
+    (patent_status = 'PDF Downloaded', confidence > 0.3) and normalise it to
+    three columns: _drug_norm, _pn_norm, _expiry_year.
 
-_PATENT_MASTER_QUERY_ALL = """
-SELECT molecule_name, patent_number
-FROM `{table}`
-WHERE patent_status = 'PDF Downloaded'
-AND confidence > 0.3
-"""
-
-
-def _load_approved_patent_numbers(project: str, dataset: str, table: str, drug_names,
-                                   credentials_path: Optional[str]) -> Dict[str, set]:
-    """Query patent_master for approved patent numbers (patent_status =
-    'PDF Downloaded' and confidence > 0.3), grouped by normalised drug/
-    molecule name (lower-cased, stripped — matching `lower(molecule_name) =`).
-
-    One query covers every requested drug rather than one query per drug.
-    Returns {} (and prints a warning) on query failure.
+    Returns an empty DataFrame with those columns if patent_master_df is
+    empty/None or is missing an expected column.
     """
-    fq_table = f"{project}.{dataset}.{table}"
-    drug_names = sorted({str(d).strip().lower() for d in drug_names if str(d).strip()})
+    empty = pd.DataFrame(columns=["_drug_norm", "_pn_norm", "_expiry_year"])
+    if patent_master_df is None or patent_master_df.empty:
+        print("  [WARN] patent_master returned no rows.")
+        return empty
 
-    client = _bq_client(project, credentials_path)
-    try:
-        if drug_names:
-            query = _PATENT_MASTER_QUERY_BY_MOLECULES.format(table=fq_table)
-            job_config = bigquery.QueryJobConfig(
-                query_parameters=[bigquery.ArrayQueryParameter("molecule_names", "STRING", drug_names)]
-            )
-            print(f"\n  [patent_master] Querying {fq_table} for {len(drug_names)} drug(s)' approved patents...")
-            rows = client.query(query, job_config=job_config).result()
-        else:
-            query = _PATENT_MASTER_QUERY_ALL.format(table=fq_table)
-            print(f"\n  [patent_master] Querying {fq_table} for ALL molecules' approved patents...")
-            rows = client.query(query).result()
-    except Exception as e:
-        print(f"  [WARN] [patent_master] Query failed against {fq_table}: {e} — skipping approval filter.")
-        return {}
+    molecule_col = _find_col(patent_master_df, ["molecule", "name"]) or _find_col(patent_master_df, ["molecule"])
+    pn_col       = _find_col(patent_master_df, ["patent", "number"])
+    status_col   = _find_col(patent_master_df, ["patent", "status"]) or _find_col(patent_master_df, ["status"])
+    conf_col     = _find_col(patent_master_df, ["confidence"])
+    expiry_col   = _find_col(patent_master_df, ["expiry", "date"])
 
-    approved: Dict[str, set] = {}
-    for row in rows:
-        if not row.molecule_name or not row.patent_number:
-            continue
-        pn_norm = _normalize_patent_number(row.patent_number)
-        if not pn_norm:
-            continue
-        approved.setdefault(str(row.molecule_name).strip().lower(), set()).add(pn_norm)
+    missing = [n for n, c in (("molecule_name", molecule_col), ("patent_number", pn_col),
+                               ("patent_status", status_col), ("confidence", conf_col),
+                               ("expiry_date", expiry_col)) if not c]
+    if missing:
+        print(f"  [WARN] patent_master missing expected column(s): {missing} — cannot use it.")
+        return empty
 
-    print(f"  [patent_master] {sum(len(v) for v in approved.values())} approved patent number(s) "
-          f"across {len(approved)} drug(s).")
-    return approved
+    df = patent_master_df.copy()
+    status_ok = df[status_col].astype(str).str.strip() == "PDF Downloaded"
+    conf_ok   = pd.to_numeric(df[conf_col], errors="coerce") > 0.3
+    df = df[status_ok & conf_ok]
+    if df.empty:
+        print("  [WARN] patent_master has no row with patent_status='PDF Downloaded' and confidence>0.3.")
+        return empty
+
+    out = pd.DataFrame({
+        "_drug_norm":   df[molecule_col].astype(str).map(_normalize_drug_str),
+        "_pn_norm":     df[pn_col].map(_normalize_patent_number),
+        "_expiry_year": df[expiry_col].map(_expiry_year_from_date),
+    })
+    out = out[out["_pn_norm"] != ""]
+
+    print(f"  [patent_master] {len(out)} approved patent row(s) across "
+          f"{out['_drug_norm'].nunique()} drug(s) "
+          f"({int(out['_expiry_year'].notna().sum())} with a usable expiry_date).")
+    return out
 
 
-def _filter_to_approved_patents(final_df: pd.DataFrame, project: str, dataset: str, table: str,
-                                 credentials_path: Optional[str]) -> pd.DataFrame:
-    """Restrict final_df to only the patent_master-approved shortlist
-    (patent_status = 'PDF Downloaded' and confidence > 0.3) for that drug,
-    before any patent-level computation (dedup, expiry sourcing, Years to
-    Entry, d2) runs.
+def _filter_to_approved_patents(final_df: pd.DataFrame,
+                                 patent_master_approved: pd.DataFrame) -> pd.DataFrame:
+    """Restrict final_df to only the patent_master-approved shortlist for
+    that drug, before any patent-level computation (dedup, expiry sourcing,
+    Years to Entry, d2) runs.
 
     Forecasted rows (Type == 'Forecasted') and rows with a blank Patent
     Number are left untouched — patent_master only tracks real, discovered
     patents, so it has no opinion on forecasted/placeholder rows. Every
     other ("Existing") row with a Patent Number is dropped unless its
-    normalised patent number is in the approved set for that drug.
+    normalised (drug, patent number) pair is in the approved set.
     """
     required = ["Patent Number", "Drug Name"]
     missing = [c for c in required if c not in final_df.columns]
@@ -118,18 +124,16 @@ def _filter_to_approved_patents(final_df: pd.DataFrame, project: str, dataset: s
         print("  [patent_master filter] No existing-patent rows with a Patent Number — nothing to filter.")
         return final_df
 
-    drug_names = final_df.loc[eligible, "Drug Name"].dropna().astype(str).unique()
-    approved_by_drug = _load_approved_patent_numbers(project, dataset, table, drug_names, credentials_path)
-    if not approved_by_drug:
-        print("  [WARN] [patent_master filter] No approved patents returned — "
+    approved_pairs = set(zip(patent_master_approved["_drug_norm"], patent_master_approved["_pn_norm"]))
+    if not approved_pairs:
+        print("  [WARN] [patent_master filter] No approved patents available — "
               "all existing-patent rows will be dropped.")
 
     drug_norm = final_df["Drug Name"].astype(str).str.strip().str.lower()
     pn_norm   = pn.map(_normalize_patent_number)
 
     approved_mask = pd.Series(
-        [pn_norm.iat[i] in approved_by_drug.get(drug_norm.iat[i], set())
-         for i in range(len(final_df))],
+        [(drug_norm.iat[i], pn_norm.iat[i]) in approved_pairs for i in range(len(final_df))],
         index=final_df.index,
     )
 
@@ -209,64 +213,56 @@ def _dedupe_duplicate_patents(final_df: pd.DataFrame) -> pd.DataFrame:
     return final_df
 
 
-# ── Expiry from patent_discovery ──────────────────────────────────────────────
+# ── Expiry from patent_master ──────────────────────────────────────────────────
 
-def _apply_patent_discovery_expiry(final_df: pd.DataFrame,
-                                    patent_discovery_df: Optional[pd.DataFrame]) -> pd.DataFrame:
+def _apply_patent_master_expiry(final_df: pd.DataFrame,
+                                 patent_master_approved: pd.DataFrame) -> pd.DataFrame:
     """Source Controlling Patent Expiry Year authoritatively from
-    patent_discovery.expiry_date (matched by Patent Number).
+    patent_master.expiry_date, matched by (Drug Name, Patent Number) — i.e.
+    the same approved shortlist _filter_to_approved_patents uses.
 
     Resolution order per row:
-      1. patent_discovery.expiry_date, matched on that row's own Patent Number.
-      2. Existing ("non-Forecasted") rows only: the MAX patent_discovery-resolved
-         expiry year among that same drug's OTHER Existing patents in the SAME
-         Jurisdiction — i.e. the latest-expiring sibling patent "covers" this
-         one when its own patent hasn't been discovered/matched yet.
-      3. Filing Date + 20 — used for Forecasted rows unconditionally (they have
-         no real patent number to look up), and for Existing rows only as a
-         last resort when that drug+jurisdiction has no patent_discovery-
+      1. patent_master.expiry_date, matched on this row's own (drug, patent
+         number) pair.
+      2. Existing ("non-Forecasted") rows only: the MAX patent_master-resolved
+         expiry year among that same drug's OTHER Existing patents in the
+         SAME Jurisdiction — i.e. the latest-expiring sibling patent "covers"
+         this one when its own patent has no usable expiry_date.
+      3. Filing Date + 20 — used for Forecasted rows unconditionally (they
+         have no real patent number to look up), and for Existing rows only
+         as a last resort when that drug+jurisdiction has no patent_master-
          resolved expiry at all to take a max from.
       4. Left blank if even Filing Date is unusable.
     """
-    expiry_col, pn_col, filing_col = (
-        "Controlling Patent Expiry Year", "Patent Number", "Filing Date")
-    missing = [c for c in (expiry_col, pn_col, filing_col) if c not in final_df.columns]
+    expiry_col, pn_col, filing_col, drug_col = (
+        "Controlling Patent Expiry Year", "Patent Number", "Filing Date", "Drug Name")
+    missing = [c for c in (expiry_col, pn_col, filing_col, drug_col) if c not in final_df.columns]
     if missing:
-        print(f"  [WARN] Cannot source {expiry_col!r} from patent_discovery — missing: {missing}")
+        print(f"  [WARN] Cannot source {expiry_col!r} from patent_master — missing: {missing}")
         return final_df
 
-    pd_pn_col = pd_expiry_col = None
-    if patent_discovery_df is not None and not patent_discovery_df.empty:
-        pd_pn_col     = _find_col(patent_discovery_df, ["patent", "number"])
-        pd_expiry_col = _find_col(patent_discovery_df, ["expiry", "date"])
-
-    def _expiry_year_from_date(val):
-        if val is None or (isinstance(val, float) and pd.isna(val)):
-            return np.nan
-        if isinstance(val, pd.Timestamp):
-            return float(val.year) if not pd.isna(val) else np.nan
-        m = re.match(r"(\d{4})", str(val).strip())
-        return float(m.group(1)) if m else np.nan
-
-    # ── Step 1: direct match on this row's own Patent Number ─────────────────
-    pd_expiry_year = pd.Series(np.nan, index=final_df.index)
-    if pd_pn_col and pd_expiry_col:
-        pdd = patent_discovery_df.copy()
-        pdd["_pn_norm"] = pdd[pd_pn_col].map(_normalize_patent_number)
-        expiry_map = (pdd[pdd["_pn_norm"] != ""]
-                      .groupby("_pn_norm")[pd_expiry_col].first()
+    # ── Step 1: direct match on this row's own (drug, patent number) pair ────
+    expiry_map = {}
+    if not patent_master_approved.empty:
+        expiry_map = (patent_master_approved.dropna(subset=["_expiry_year"])
+                      .groupby(["_drug_norm", "_pn_norm"])["_expiry_year"].first()
                       .to_dict())
-        pn_norm = final_df[pn_col].map(_normalize_patent_number)
-        pd_expiry_year = pn_norm.map(expiry_map).map(_expiry_year_from_date)
-    else:
-        print("  [WARN] patent_discovery missing patent_number/expiry_date — "
-              "no row can be directly matched; falling through to drug-max / Filing Date + 20.")
+    if not expiry_map:
+        print("  [WARN] patent_master has no approved row with a usable expiry_date — "
+              "falling through to drug-max / Filing Date + 20 for every row.")
 
-    n_from_pd = int(pd_expiry_year.notna().sum())
-    if n_from_pd:
-        final_df.loc[pd_expiry_year.notna(), expiry_col] = pd_expiry_year[pd_expiry_year.notna()]
+    drug_norm = final_df[drug_col].astype(str).str.strip().str.lower()
+    pn_norm   = final_df[pn_col].map(_normalize_patent_number)
+    pm_expiry_year = pd.Series(
+        [expiry_map.get((drug_norm.iat[i], pn_norm.iat[i]), np.nan) for i in range(len(final_df))],
+        index=final_df.index,
+    )
 
-    still_blank = pd_expiry_year.isna()
+    n_from_pm = int(pm_expiry_year.notna().sum())
+    if n_from_pm:
+        final_df.loc[pm_expiry_year.notna(), expiry_col] = pm_expiry_year[pm_expiry_year.notna()]
+
+    still_blank = pm_expiry_year.isna()
 
     if "Type" in final_df.columns:
         is_forecasted = final_df["Type"].astype(str).str.strip().str.lower() == "forecasted"
@@ -277,20 +273,19 @@ def _apply_patent_discovery_expiry(final_df: pd.DataFrame,
     existing_unresolved   = still_blank & is_existing
     forecasted_unresolved = still_blank & is_forecasted  # always falls to Filing Date + 20 below
 
-    # ── Step 2: Existing rows — max patent_discovery expiry among that drug's
+    # ── Step 2: Existing rows — max patent_master expiry among that drug's
     #            other Existing patents in the same jurisdiction ────────────
     n_from_drug_max = 0
     remaining_existing_unresolved = existing_unresolved
     if existing_unresolved.any():
-        if "Drug Name" in final_df.columns and "Jurisdiction" in final_df.columns:
-            drug_key  = final_df["Drug Name"].astype(str).str.strip().str.lower()
+        if "Jurisdiction" in final_df.columns:
             jur_key   = final_df["Jurisdiction"].astype(str).str.strip().str.upper()
-            group_key = drug_key + "|" + jur_key
+            group_key = drug_norm + "|" + jur_key
 
-            resolved_existing_mask = pd_expiry_year.notna() & is_existing
+            resolved_existing_mask = pm_expiry_year.notna() & is_existing
             max_by_group = (
                 pd.DataFrame({"key": group_key[resolved_existing_mask],
-                              "val": pd_expiry_year[resolved_existing_mask]})
+                              "val": pm_expiry_year[resolved_existing_mask]})
                 .groupby("key")["val"].max()
                 .to_dict()
             )
@@ -303,11 +298,11 @@ def _apply_patent_discovery_expiry(final_df: pd.DataFrame,
 
             remaining_existing_unresolved = existing_unresolved & drug_max.isna()
         else:
-            print("  [WARN] Missing 'Drug Name'/'Jurisdiction' — cannot compute the drug+jurisdiction "
-                  "max fallback; existing rows go straight to Filing Date + 20 instead.")
+            print("  [WARN] Missing 'Jurisdiction' — cannot compute the drug+jurisdiction max "
+                  "fallback; existing rows go straight to Filing Date + 20 instead.")
 
     # ── Step 3: Filing Date + 20 — Forecasted rows always; Existing rows only
-    #            when their drug+jurisdiction had no patent_discovery match at all ─
+    #            when their drug+jurisdiction had no patent_master match at all ─
     needs_filing_fallback = forecasted_unresolved | remaining_existing_unresolved
     filing_years  = final_df.loc[needs_filing_fallback, filing_col].map(_filing_year)
     fallback_mask = filing_years.notna()
@@ -317,7 +312,7 @@ def _apply_patent_discovery_expiry(final_df: pd.DataFrame,
         final_df.loc[fallback_idx, expiry_col] = filing_years[fallback_mask] + 20
 
     n_unresolved = int(needs_filing_fallback.sum()) - n_fallback
-    print(f"  [patent_discovery expiry] From patent_discovery: {n_from_pd} row(s); "
+    print(f"  [patent_master expiry] From patent_master: {n_from_pm} row(s); "
           f"drug+jurisdiction max (existing rows): {n_from_drug_max} row(s); "
           f"Filing Date + 20 fallback: {n_fallback} row(s); "
           f"unresolved: {n_unresolved} row(s).")
@@ -327,22 +322,25 @@ def _apply_patent_discovery_expiry(final_df: pd.DataFrame,
 # ── d2 builder ────────────────────────────────────────────────────────────────
 
 def _build_d2(project: str, dataset: str, d1_table: str,
-              patent_discovery_table: str, d2_table: str,
-              credentials_path: Optional[str]) -> None:
-    """Read d1, enrich with patent_discovery.expiry_date, recompute
-    Years to Entry and Avg Years to Entry / IP Dimension Score, write to d2."""
-    print(f"\n  [d2] Building {d2_table!r} from {d1_table!r} + {patent_discovery_table!r} ...")
+              patent_project: str, patent_dataset: str, patent_master_table: str,
+              d2_table: str, credentials_path: Optional[str]) -> None:
+    """Read d1 (from project/dataset), re-enrich with a fresh patent_master
+    pull (from patent_project/patent_dataset — independent of where d1/d2
+    live), recompute Years to Entry and Avg Years to Entry / IP Dimension
+    Score, write to d2 (also in project/dataset).
+
+    Re-pulling patent_master here (rather than trusting what's already in
+    d1) picks up any patent_master changes made between d1's build and d2's."""
+    print(f"\n  [d2] Building {d2_table!r} from {d1_table!r} + {patent_master_table!r} ...")
 
     d1_df = _load_table_from_bq(project, dataset, d1_table, d1_table, credentials_path)
     if d1_df.empty:
         print(f"  [WARN] {d1_table!r} returned no rows — nothing to write to {d2_table!r}.")
         return
 
-    pd_df = _load_table_from_bq(project, dataset, patent_discovery_table,
-                                  "patent_discovery", credentials_path)
-
-    pd_pn_col     = _find_col(pd_df, ["patent", "number"]) if not pd_df.empty else None
-    pd_expiry_col = _find_col(pd_df, ["expiry", "date"])   if not pd_df.empty else None
+    patent_master_df = _load_table_from_bq(patent_project, patent_dataset, patent_master_table,
+                                             "patent_master", credentials_path)
+    patent_master_approved = _load_patent_master_approved(patent_master_df)
 
     d1_pn_col   = _find_col(d1_df, ["patent", "number"])
     type_col    = _find_col(d1_df, ["type"])
@@ -357,33 +355,26 @@ def _build_d2(project: str, dataset: str, d1_table: str,
 
     d2_df = d1_df.copy()
 
-    # Step 1: join expiry_date from patent_discovery
-    if not pd_df.empty and pd_pn_col and pd_expiry_col and d1_pn_col:
-        pd_df = pd_df.copy()
-        pd_df["_pn_norm"] = pd_df[pd_pn_col].map(_normalize_patent_number)
-        d2_df["_pn_norm"] = d2_df[d1_pn_col].map(_normalize_patent_number)
-        expiry_map = (pd_df[pd_df["_pn_norm"] != ""]
-                      .groupby("_pn_norm")[pd_expiry_col].first().to_dict())
-        d2_df["expiry_date"] = d2_df["_pn_norm"].map(expiry_map)
-        n_matched = int(d2_df["expiry_date"].notna().sum())
-        print(f"  [d2] Matched {n_matched}/{len(d2_df)} rows to patent_discovery on patent_number.")
-        d2_df = d2_df.drop(columns=["_pn_norm"])
+    # Step 1: join expiry_year from patent_master, matched by drug + patent_number
+    if not patent_master_approved.empty and d1_pn_col and drug_col:
+        expiry_map = (patent_master_approved.dropna(subset=["_expiry_year"])
+                      .groupby(["_drug_norm", "_pn_norm"])["_expiry_year"].first()
+                      .to_dict())
+        drug_norm = d2_df[drug_col].astype(str).str.strip().str.lower()
+        pn_norm   = d2_df[d1_pn_col].map(_normalize_patent_number)
+        d2_df["expiry_year_from_patent_master"] = [
+            expiry_map.get((d, p), np.nan) for d, p in zip(drug_norm, pn_norm)
+        ]
+        n_matched = int(pd.Series(d2_df["expiry_year_from_patent_master"]).notna().sum())
+        print(f"  [d2] Matched {n_matched}/{len(d2_df)} rows to patent_master on drug + patent_number.")
     else:
-        d2_df["expiry_date"] = np.nan
-        print("  [WARN] [d2] Skipping join — missing required columns or empty table.")
+        d2_df["expiry_year_from_patent_master"] = np.nan
+        print("  [WARN] [d2] Skipping patent_master join — missing required columns or no approved rows.")
 
     # Step 2: set Controlling_Patent_Expiry_Year
     if not cpey_col:
         cpey_col = "Controlling_Patent_Expiry_Year"
         d2_df[cpey_col] = np.nan
-
-    def _expiry_year_from_date(val):
-        if val is None or (isinstance(val, float) and pd.isna(val)):
-            return np.nan
-        if isinstance(val, pd.Timestamp):
-            return float(val.year) if not pd.isna(val) else np.nan
-        m = re.match(r"(\d{4})", str(val).strip())
-        return float(m.group(1)) if m else np.nan
 
     existing_mask   = pd.Series(True, index=d2_df.index)
     forecasted_mask = pd.Series(False, index=d2_df.index)
@@ -391,10 +382,9 @@ def _build_d2(project: str, dataset: str, d1_table: str,
         forecasted_mask = d2_df[type_col].astype(str).str.strip().str.lower() == "forecasted"
         existing_mask   = ~forecasted_mask
 
-    existing_expiry_year = d2_df["expiry_date"].map(_expiry_year_from_date)
-    d2_df.loc[existing_mask, cpey_col] = existing_expiry_year[existing_mask]
-    n_existing_matched = int(existing_expiry_year[existing_mask].notna().sum())
-    print(f"  [d2] Existing rows: {cpey_col!r} = year(expiry_date) for "
+    d2_df.loc[existing_mask, cpey_col] = d2_df.loc[existing_mask, "expiry_year_from_patent_master"]
+    n_existing_matched = int(d2_df.loc[existing_mask, "expiry_year_from_patent_master"].notna().sum())
+    print(f"  [d2] Existing rows: {cpey_col!r} = patent_master expiry_date year for "
           f"{n_existing_matched}/{int(existing_mask.sum())} rows.")
 
     n_forecasted = int(forecasted_mask.sum())
@@ -403,6 +393,8 @@ def _build_d2(project: str, dataset: str, d1_table: str,
         d2_df.loc[forecasted_mask, cpey_col] = filing_years + 20
         print(f"  [d2] Forecasted rows: {cpey_col!r} = Filing_Year + 20 for "
               f"{int(filing_years.notna().sum())}/{n_forecasted} rows.")
+
+    d2_df = d2_df.drop(columns=["expiry_year_from_patent_master"], errors="ignore")
 
     # Step 3: recompute Years_to_Entry
     if yte_col and yte_col in d2_df.columns:
